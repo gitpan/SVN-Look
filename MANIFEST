@@ -1,0 +1,10 @@
+.cvsignore
+Changes
+lib/SVN/Look.pm
+Makefile.PL
+MANIFEST
+META.yml
+README
+t/00-load.t
+t/01-commands.t
+t/test-functions.pl
