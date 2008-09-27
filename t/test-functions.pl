@@ -10,6 +10,17 @@ use File::Temp qw/tempdir/;
 # Make sure the svn messages come in English.
 $ENV{LC_MESSAGES} = 'C';
 
+sub has_svn {
+  CMD:
+    for my $cmd (qw/svn svnadmin svnlook/) {
+	for my $path (split /:/, $ENV{PATH}) {
+	    next CMD if -x "$path/$cmd";
+	}
+	return 0;
+    }
+    return 1;
+}
+
 our $T;
 
 sub do_script {

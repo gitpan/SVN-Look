@@ -2,7 +2,6 @@ package SVN::Look;
 
 use warnings;
 use strict;
-use Switch;
 
 =head1 NAME
 
@@ -10,11 +9,11 @@ SVN::Look - A caching wrapper aroung the svnlook command.
 
 =head1 VERSION
 
-Version 0.08
+Version 0.09
 
 =cut
 
-our $VERSION = '0.08.' . substr(q$Revision: 360 $, 10);
+our $VERSION = '0.09.' . substr(q$Revision: 366 $, 10);
 
 =head1 SYNOPSIS
 
@@ -42,7 +41,12 @@ in the object, avoiding repetitious calls.
 
 =cut
 
-our $SVNLOOK = '/usr/bin/svnlook';
+our $SVNLOOK;
+{
+    my @svnlooks = grep { -x } '/usr/bin/svnlook', '/usr/local/bin/svnlook';
+    @svnlooks or die "Cannot find the svnlook command.\n";
+    $SVNLOOK = $svnlooks[0];
+}
 
 =head1 METHODS
 
@@ -78,10 +82,14 @@ sub new {
 	changed  => undef,
 	proplist => undef,
     };
-    switch ($what) {
-	case '-t' { $self->{txn} = $txn_or_rev }
-	case '-r' { $self->{rev} = $txn_or_rev }
-	else      { die "Look::new: third argument must be -t or -r, not ($what)" }
+    if ($what eq '-t') {
+	$self->{txn} = $txn_or_rev;
+    }
+    elsif ($what eq '-r') {
+	$self->{rev} = $txn_or_rev;
+    }
+    else {
+	die "Look::new: third argument must be -t or -r, not ($what)";
     }
     bless $self, $class;
     return $self;
@@ -202,6 +210,39 @@ sub proplist {
     return $self->{proplist}{$path};
 }
 
+=item B<changed_hash>
+
+Returns a reference to a hash containing information about all file
+changes occurred in the revision. The hash always has the following
+pairs:
+
+=over
+
+=item added
+
+A list of files added in the revision.
+
+=item deleted
+
+A list of files deleted in the revision.
+
+=item updated
+
+A list of files updated in the revision.
+
+=item prop_modified
+
+A list of files that had properties modified in the revision.
+
+=item copied
+
+A hash mapping the old to the new name of each file moved in the
+revision.
+
+=back
+
+=cut
+
 sub changed_hash {
     my $self = shift;
     unless ($self->{changed_hash}) {
@@ -210,14 +251,18 @@ sub changed_hash {
 	    next if length($_) <= 4;
 	    chomp;
 	    my ($action, $prop, undef, undef, $changed) = unpack 'AAAA A*', $_;
-	    switch ($action) {
-		case 'A' { push @added,    $changed }
-		case 'D' { push @deleted,  $changed }
-		case 'U' { push @updated, $changed }
-		else {
-		    if ($changed =~ /^\(from (.*?):r(\d+)\)$/) {
-			$copied{$added[-1]} = [$1 => $2];
-		    }
+	    if    ($action eq 'A') {
+		push @added,   $changed;
+	    }
+	    elsif ($action eq 'D') {
+		push @deleted, $changed;
+	    }
+	    elsif ($action eq 'U') {
+		push @updated, $changed;
+	    }
+	    else {
+		if ($changed =~ /^\(from (.*?):r(\d+)\)$/) {
+		    $copied{$added[-1]} = [$1 => $2];
 		}
 	    }
 	    if ($prop eq 'U') {
