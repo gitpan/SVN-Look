@@ -1,5 +1,9 @@
 Revision history for SVN-Look. -*- text -*-
 
+0.10	2008-09-27
+
+	Implemented the 'diff' method.
+
 0.09	2008-09-27
 	Removed dependency from Switch.pm.
 

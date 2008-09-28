@@ -9,7 +9,7 @@ use Test::More;
 require "test-functions.pl";
 
 if (has_svn()) {
-    plan tests => 4;
+    plan tests => 5;
 }
 else {
     plan skip_all => 'Need svn commands in the PATH.';
@@ -18,7 +18,7 @@ else {
 my $t = reset_repo();
 
 system(<<"EOS");
-touch $t/wc/file
+echo first >$t/wc/file
 svn add -q --no-auto-props $t/wc/file
 svn ps -q svn:mime-type text/plain $t/wc/file
 svn ci -q -mlog $t/wc/file
@@ -34,3 +34,11 @@ cmp_ok($look->log_msg(), 'eq', "log\n", 'log_msg');
 
 cmp_ok(($look->added())[0], 'eq', 'file', 'added');
 
+system(<<"EOS");
+echo second >>$t/wc/file
+svn ci -q -mlog $t/wc/file
+EOS
+
+$look = SVN::Look->new("$t/repo", -r => 2);
+
+cmp_ok($look->diff(), '=~', qr/\+second/, 'diff');

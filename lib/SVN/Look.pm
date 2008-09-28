@@ -9,11 +9,11 @@ SVN::Look - A caching wrapper aroung the svnlook command.
 
 =head1 VERSION
 
-Version 0.09
+Version 0.10
 
 =cut
 
-our $VERSION = '0.09.' . substr(q$Revision: 366 $, 10);
+our $VERSION = '0.10.' . substr(q$Revision: 369 $, 10);
 
 =head1 SYNOPSIS
 
@@ -383,13 +383,46 @@ sub copied_to {
 
 =item B<cat> PATH
 
-Returns the contents of the file at PATH.
+Returns the contents of the file at PATH. In scalar context, return
+the whole contents in a single string. In list context returns a list
+of chomped lines.
 
 =cut
 
 sub cat {
     my ($self, $path) = @_;
     return $self->_svnlook('cat', $path);
+}
+
+=item B<diff> [OPTS, ...]
+
+Returns the GNU-style diffs of changed files and properties. There are
+three optional options that can be passed as strings:
+
+=over
+
+=item C<--no-diff-deleted>
+
+Do not print differences for deleted files
+
+=item C<--no-diff-added>
+
+Do not print differences for added files.
+
+=item C<--diff-copy-from>
+
+Print differences against the copy source.
+
+=back
+
+In scalar context, return the whole diff in a single string. In list
+context returns a list of chomped lines.
+
+=cut
+
+sub diff {
+    my ($self, @opts) = @_;
+    return $self->_svnlook('diff', @opts);
 }
 
 =back
@@ -431,9 +464,6 @@ L<http://cpanratings.perl.org/d/SVN-Hooks>
 L<http://search.cpan.org/dist/SVN-Hooks>
 
 =back
-
-
-=head1 ACKNOWLEDGEMENTS
 
 
 =head1 COPYRIGHT & LICENSE
