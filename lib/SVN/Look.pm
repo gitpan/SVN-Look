@@ -2,6 +2,7 @@ package SVN::Look;
 
 use warnings;
 use strict;
+use File::Spec::Functions qw/catfile path rootdir/;
 
 =head1 NAME
 
@@ -9,11 +10,11 @@ SVN::Look - A caching wrapper aroung the svnlook command.
 
 =head1 VERSION
 
-Version 0.10
+Version 0.11
 
 =cut
 
-our $VERSION = '0.10.' . substr(q$Revision: 369 $, 10);
+our $VERSION = '0.11.' . substr(q$Revision: 388 $, 10);
 
 =head1 SYNOPSIS
 
@@ -42,11 +43,21 @@ in the object, avoiding repetitious calls.
 =cut
 
 our $SVNLOOK;
-{
-    my @svnlooks = grep { -x } '/usr/bin/svnlook', '/usr/local/bin/svnlook';
-    @svnlooks or die "Cannot find the svnlook command.\n";
-    $SVNLOOK = $svnlooks[0];
+my $root = rootdir();
+for my $d (
+    path(),
+    catfile($root, 'usr', 'local', 'bin'),
+    catfile($root, 'usr', 'bin'),
+    catfile($root, 'bin'),
+) {
+    my $f = catfile($d, 'svnlook');
+    if (-x $f) {
+	$SVNLOOK = $f;
+	last;
+    }
 }
+die "Aborting because I couldn't find the svnlook executable.\n"
+    unless $SVNLOOK;
 
 =head1 METHODS
 
@@ -429,7 +440,7 @@ sub diff {
 
 =head1 AUTHOR
 
-Gustavo Chaves, C<< <gustavo+perl at gnustavo.com> >>
+Gustavo Chaves, C<< <gnustavo@cpan.org> >>
 
 =head1 BUGS
 
@@ -465,14 +476,12 @@ L<http://search.cpan.org/dist/SVN-Hooks>
 
 =back
 
-
 =head1 COPYRIGHT & LICENSE
 
 Copyright 2008 Gustavo Chaves, all rights reserved.
 
 This program is free software; you can redistribute it and/or modify it
 under the same terms as Perl itself.
-
 
 =cut
 

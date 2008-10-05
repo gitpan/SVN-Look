@@ -6,15 +6,23 @@ use strict;
 use warnings;
 use Cwd;
 use File::Temp qw/tempdir/;
+use File::Spec::Functions qw/catfile path/;
 
 # Make sure the svn messages come in English.
 $ENV{LC_MESSAGES} = 'C';
 
 sub has_svn {
+    my @path = (
+	path(),
+	catfile('usr', 'local', 'bin'),
+	catfile('usr', 'bin'),
+	catfile('bin'),
+    );
+
   CMD:
     for my $cmd (qw/svn svnadmin svnlook/) {
-	for my $path (split /:/, $ENV{PATH}) {
-	    next CMD if -x "$path/$cmd";
+	for my $path (@path) {
+	    next CMD if -x catfile($path, $cmd);
 	}
 	return 0;
     }
@@ -38,7 +46,8 @@ sub do_script {
 sub work_ok {
     my ($tag, $cmd) = @_;
     my $num = 1 + Test::Builder->new()->current_test();
-    ok((do_script($num, $cmd) == 0), $tag);
+    ok((do_script($num, $cmd) == 0), $tag)
+	or diag("work_ok command failed.\n");
 }
 
 sub work_nok {
@@ -48,20 +57,50 @@ sub work_nok {
     my $exit = do_script($num, $cmd);
     if ($exit == 0) {
 	fail($tag);
+	diag("work_nok command worked but it shouldn't!\n");
 	return;
     }
 
     my $stderr = `cat $T/$num.stderr`;
 
     if (! ref $error_expect) {
-	ok(index($stderr, $error_expect) >= 0, $tag);
+	ok(index($stderr, $error_expect) >= 0, $tag)
+	    or diag("work_nok:\n  '$stderr'\n    does not contain\n  '$error_expect'\n");
     }
     elsif (ref $error_expect eq 'Regexp') {
-	ok($stderr =~ $error_expect, $tag);
+	like($stderr, $error_expect, $tag);
     }
     else {
 	fail($tag);
+	diag("work_nok: invalid second argument to test.\n");
     }
+}
+
+sub set_hook {
+    my ($text) = @_;
+    open my $fd, '>', "$T/repo/hooks/svn-hooks.pl"
+	or die "Can't create $T/repo/hooks/svn-hooks.pl: $!";
+    print $fd <<'EOS';
+#!/usr/bin/perl
+use strict;
+use warnings;
+use lib 'blib/lib';
+use SVN::Hooks;
+EOS
+    print $fd $text, "\n";
+    print $fd <<'EOS';
+run_hook($0, @ARGV);
+EOS
+    close $fd;
+    chmod 0755 => "$T/repo/hooks/svn-hooks.pl";
+}
+
+sub set_conf {
+    my ($text) = @_;
+    open my $fd, '>', "$T/repo/conf/svn-hooks.conf"
+	or die "Can't create $T/repo/conf/svn-hooks.conf: $!";
+    print $fd $text, "\n1;\n";
+    close $fd;
 }
 
 sub reset_repo {
@@ -71,6 +110,15 @@ sub reset_repo {
     system(<<"EOS");
 svnadmin create $T/repo
 EOS
+
+    set_hook('');
+
+    foreach my $hook (qw/post-commit post-lock post-refprop-change post-unlock pre-commit
+			 pre-lock pre-revprop-change pre-unlock start-commit/) {
+	symlink 'svn-hooks.pl' => "$T/repo/hooks/$hook";
+    }
+
+    set_conf('');
 
     system(<<"EOS");
 svn co -q file://$T/repo $T/wc

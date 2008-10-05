@@ -1,11 +1,11 @@
 # http://module-build.sourceforge.net/META-spec.html
 #XXXXXXX This is a prototype!!!  It will change in the future!!! XXXXX#
 name:         SVN-Look
-version:      0.10.369
+version:      0.11.388
 version_from: lib/SVN/Look.pm
 installdirs:  site
 requires:
-    Switch:                        0
+    File::Spec::Functions:         0
     Test::More:                    0
 
 distribution_type: module
