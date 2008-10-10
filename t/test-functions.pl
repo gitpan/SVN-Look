@@ -1,6 +1,6 @@
 # Copyright (C) 2008 by CPqD
 
-BEGIN { $ENV{PATH} = '/bin:/usr/bin' }
+BEGIN { $ENV{PATH} = '/usr/local/bin:/usr/bin:/bin' }
 
 use strict;
 use warnings;
@@ -12,16 +12,9 @@ use File::Spec::Functions qw/catfile path/;
 $ENV{LC_MESSAGES} = 'C';
 
 sub has_svn {
-    my @path = (
-	path(),
-	catfile('usr', 'local', 'bin'),
-	catfile('usr', 'bin'),
-	catfile('bin'),
-    );
-
   CMD:
     for my $cmd (qw/svn svnadmin svnlook/) {
-	for my $path (@path) {
+	for my $path (path()) {
 	    next CMD if -x catfile($path, $cmd);
 	}
 	return 0;
@@ -76,33 +69,6 @@ sub work_nok {
     }
 }
 
-sub set_hook {
-    my ($text) = @_;
-    open my $fd, '>', "$T/repo/hooks/svn-hooks.pl"
-	or die "Can't create $T/repo/hooks/svn-hooks.pl: $!";
-    print $fd <<'EOS';
-#!/usr/bin/perl
-use strict;
-use warnings;
-use lib 'blib/lib';
-use SVN::Hooks;
-EOS
-    print $fd $text, "\n";
-    print $fd <<'EOS';
-run_hook($0, @ARGV);
-EOS
-    close $fd;
-    chmod 0755 => "$T/repo/hooks/svn-hooks.pl";
-}
-
-sub set_conf {
-    my ($text) = @_;
-    open my $fd, '>', "$T/repo/conf/svn-hooks.conf"
-	or die "Can't create $T/repo/conf/svn-hooks.conf: $!";
-    print $fd $text, "\n1;\n";
-    close $fd;
-}
-
 sub reset_repo {
     my $cleanup = exists $ENV{REPO_CLEANUP} ? $ENV{REPO_CLEANUP} : 1;
     $T = tempdir('t.XXXX', DIR => getcwd(), CLEANUP => $cleanup);
@@ -110,15 +76,6 @@ sub reset_repo {
     system(<<"EOS");
 svnadmin create $T/repo
 EOS
-
-    set_hook('');
-
-    foreach my $hook (qw/post-commit post-lock post-refprop-change post-unlock pre-commit
-			 pre-lock pre-revprop-change pre-unlock start-commit/) {
-	symlink 'svn-hooks.pl' => "$T/repo/hooks/$hook";
-    }
-
-    set_conf('');
 
     system(<<"EOS");
 svn co -q file://$T/repo $T/wc
