@@ -14,7 +14,7 @@ Version 0.12
 
 =cut
 
-our $VERSION = '0.12.' . substr(q$Revision: 409 $, 10);
+our $VERSION = '0.12.' . substr(q$Revision: 442 $, 10);
 
 =head1 SYNOPSIS
 
@@ -85,7 +85,7 @@ sub new {
     my ($class, $repo, $what, $txn_or_rev) = @_;
     my $self = {
 	repo     => $repo,
-	args     => "$what $txn_or_rev",
+	what     => [$what, $txn_or_rev],
 	txn      => undef,
 	rev      => undef,
 	author   => undef,
@@ -108,19 +108,18 @@ sub new {
 
 sub _svnlook {
     my ($self, $cmd, @args) = @_;
-    my $svnlook_cmd = join(' ', $SVNLOOK, $cmd, $self->{repo}, $self->{args}, @args);
-    open my $fd, '-|', $svnlook_cmd
-	or die "Can't exec $svnlook_cmd: $!\n";
+    open my $fd, '-|', $SVNLOOK, $cmd, $self->{repo}, @{$self->{what}}, @args
+	or die "Can't exec svnlook $cmd: $!\n";
     if (wantarray) {
 	my @lines = <$fd>;
-	close $fd or die "Failed closing $svnlook_cmd: $!\n";
+	close $fd or die "Failed closing svnlook $cmd: $!\n";
 	chomp foreach @lines;
 	return @lines;
     }
     else {
 	local $/ = undef;
 	my $line = <$fd>;
-	close $fd or die "Failed closing $svnlook_cmd: $!\n";
+	close $fd or die "Failed closing svnlook $cmd: $!\n";
 	chomp $line;
 	return $line;
     }

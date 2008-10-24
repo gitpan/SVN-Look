@@ -9,7 +9,7 @@ use Test::More;
 require "test-functions.pl";
 
 if (has_svn()) {
-    plan tests => 5;
+    plan tests => 8;
 }
 else {
     plan skip_all => 'Need svn commands in the PATH.';
@@ -42,3 +42,20 @@ EOS
 $look = SVN::Look->new("$t/repo", -r => 2);
 
 cmp_ok($look->diff(), '=~', qr/\+second/, 'diff');
+
+system(<<"EOS");
+echo space in name >$t/wc/'a b.txt'
+svn add -q --no-auto-props $t/wc/'a b.txt'
+svn ps -q svn:mime-type text/plain $t/wc/'a b.txt'
+svn ci -q -mlog $t/wc/'a b.txt'
+EOS
+
+$look = SVN::Look->new("$t/repo", -r => 3);
+
+my $pl = eval { $look->proplist('a b.txt') };
+
+ok(defined $pl, 'can call proplist in a file with spaces in the name');
+
+ok(exists $pl->{'svn:mime-type'}, 'proplist finds the expected property');
+
+is($pl->{'svn:mime-type'}, 'text/plain', 'proplist finds the correct property value');
