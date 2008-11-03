@@ -14,7 +14,7 @@ Version 0.12
 
 =cut
 
-our $VERSION = '0.12.' . substr(q$Revision: 442 $, 10);
+our $VERSION = '0.12.' . substr(q$Revision: 455 $, 10);
 
 =head1 SYNOPSIS
 
@@ -477,7 +477,7 @@ L<http://search.cpan.org/dist/SVN-Hooks>
 
 =head1 COPYRIGHT & LICENSE
 
-Copyright 2008 Gustavo Chaves, all rights reserved.
+Copyright 2008 CPqD, all rights reserved.
 
 This program is free software; you can redistribute it and/or modify it
 under the same terms as Perl itself.
