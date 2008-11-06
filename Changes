@@ -1,5 +1,9 @@
 Revision history for SVN-Look. -*- text -*-
 
+0.13	2008-11-06
+
+	Changing the LICENSE from GPL to Perl.
+
 0.12	2008-10-09
 
 	Removing dependency from SVN::Hooks from the tests.
