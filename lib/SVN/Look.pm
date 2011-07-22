@@ -11,11 +11,11 @@ SVN::Look - A caching wrapper aroung the svnlook command.
 
 =head1 VERSION
 
-Version 0.21
+Version 0.22
 
 =cut
 
-our $VERSION = '0.21';
+our $VERSION = '0.22';
 
 =head1 SYNOPSIS
 
@@ -577,7 +577,7 @@ L<http://search.cpan.org/dist/SVN-Hooks>
 
 =head1 COPYRIGHT & LICENSE
 
-Copyright 2008-2010 CPqD, all rights reserved.
+Copyright 2008-2011 CPqD, all rights reserved.
 
 This program is free software; you can redistribute it and/or modify it
 under the same terms as Perl itself.
