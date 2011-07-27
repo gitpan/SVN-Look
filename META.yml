@@ -1,6 +1,6 @@
 --- #YAML:1.0
 name:               SVN-Look
-version:            0.22
+version:            0.23
 abstract:           A caching wrapper aroung the svnlook command.
 author:
     - Gustavo Chaves <gustavo+perl@gnustavo.org>
@@ -13,6 +13,7 @@ build_requires:
 requires:
     File::Spec::Functions:  0
     Test::More:           0
+    URI::file:            0
 no_index:
     directory:
         - t
