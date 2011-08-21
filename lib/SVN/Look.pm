@@ -11,11 +11,11 @@ SVN::Look - A caching wrapper aroung the svnlook command.
 
 =head1 VERSION
 
-Version 0.24
+Version 0.25
 
 =cut
 
-our $VERSION = '0.24';
+our $VERSION = '0.25';
 
 =head1 SYNOPSIS
 
@@ -44,11 +44,6 @@ in the object, avoiding repetitious calls.
 =cut
 
 BEGIN {
-    if ($^O eq 'MSWin32') {
-	$ENV{PATH} .= ';C:\Program Files (x86)\VisualSVN Server\bin';
-    } else {
-	$ENV{PATH} .= ':/usr/local/bin:/usr/bin:/bin';
-    }
     eval {
 	open my $pipe, '-|', "svnlook --version" or die;
 	local $/ = undef;		# slurp mode
@@ -115,14 +110,14 @@ sub _svnlook {
     if (wantarray) {
         my @lines = <$fd>;
         close $fd or die "Failed closing svnlook $cmd: $!\n";
-        chomp foreach @lines;
+        chomp @lines;
         return @lines;
     }
     else {
         local $/ = undef;
         my $line = <$fd>;
         close $fd or die "Failed closing svnlook $cmd: $!\n";
-        chomp $line;
+        chomp $line unless $cmd eq 'cat';
         return $line;
     }
 }
