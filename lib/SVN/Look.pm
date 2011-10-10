@@ -11,11 +11,11 @@ SVN::Look - A caching wrapper aroung the svnlook command.
 
 =head1 VERSION
 
-Version 0.27
+Version 0.28
 
 =cut
 
-our $VERSION = '0.27';
+our $VERSION = '0.28';
 
 =head1 SYNOPSIS
 
@@ -72,7 +72,8 @@ The SVN::Look constructor needs one or three arguments:
 =item REPO is the path to the repository.
 
 =item WHAT must be either '-r' or '-t', specifying if the third
-argument is a revision number or a transaction number, respectivelly.
+argument is a revision number or a transaction number, respectively.
+If neither -r or -t is specified, the HEAD revision is used.
 
 =item NUMBER is either a revision or transaction NUMBER, as specified
 by WHAT.
@@ -110,6 +111,41 @@ sub _svnlook {
         chomp $line unless $cmd eq 'cat';
         return $line;
     }
+}
+
+=item B<repo>
+
+Returns the repository path that was passed to the constructor.
+
+=cut
+
+sub repo {
+    my $self = shift;
+    return $self->{repo};
+}
+
+=item B<txn>
+
+Returns the transaction number that was passed to the constructor. If
+none was passed, returns undef.
+
+=cut
+
+sub txn {
+    my $self = shift;
+    return $self->{opts}[0] eq '-t' ? $self->{opts}[1] : undef;
+}
+
+=item B<rev>
+
+Returns the revision number that was passed to the constructor. If
+none was passed, returns undef.
+
+=cut
+
+sub rev {
+    my $self = shift;
+    return $self->{opts}[0] eq '-r' ? $self->{opts}[1] : undef;
 }
 
 =item B<author>
