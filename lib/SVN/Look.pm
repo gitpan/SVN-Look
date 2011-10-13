@@ -11,11 +11,11 @@ SVN::Look - A caching wrapper aroung the svnlook command.
 
 =head1 VERSION
 
-Version 0.28
+Version 0.29
 
 =cut
 
-our $VERSION = '0.28';
+our $VERSION = '0.29';
 
 =head1 SYNOPSIS
 
@@ -388,6 +388,18 @@ sub dirs_changed {
         $self->{dirs_changed} = \@dirs;
     }
     return @{$self->{dirs_changed}};
+}
+
+=item B<filesize> PATH
+
+Returns the size (in bytes) of the file located at PATH as it is
+represented in the repository.
+
+=cut
+
+sub filesize {
+    my ($self, $path) = @_;
+    return $self->_svnlook('filesize', $path);
 }
 
 =item B<info>
