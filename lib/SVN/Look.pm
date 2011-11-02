@@ -11,11 +11,11 @@ SVN::Look - A caching wrapper aroung the svnlook command.
 
 =head1 VERSION
 
-Version 0.29
+Version 0.30
 
 =cut
 
-our $VERSION = '0.29';
+our $VERSION = '0.30';
 
 =head1 SYNOPSIS
 
@@ -94,9 +94,9 @@ sub new {
 
 sub _svnlook {
     my ($self, $cmd, @args) = @_;
-    my @cmd = (svnlook => $cmd, $self->{repo});
+    my @cmd = ('svnlook', $cmd, $self->{repo});
     push @cmd, @{$self->{opts}} unless $cmd =~ /^(?:youngest|uuid|lock)$/;
-    open my $fd, '-|', '"' . join('"  "', @cmd, @args) . '"'
+    open my $fd, '-|', @cmd, @args
         or die "Can't exec svnlook $cmd: $!\n";
     if (wantarray) {
         my @lines = <$fd>;

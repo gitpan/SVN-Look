@@ -1,6 +1,6 @@
 --- #YAML:1.0
 name:               SVN-Look
-version:            0.29
+version:            0.30
 abstract:           A caching wrapper aroung the svnlook command.
 author:
     - Gustavo Chaves <gustavo+perl@gnustavo.org>
@@ -18,7 +18,7 @@ no_index:
     directory:
         - t
         - inc
-generated_by:       ExtUtils::MakeMaker version 6.55_02
+generated_by:       ExtUtils::MakeMaker version 6.56
 meta-spec:
     url:      http://module-build.sourceforge.net/META-spec-v1.4.html
     version:  1.4
