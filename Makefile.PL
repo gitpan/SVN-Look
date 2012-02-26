@@ -1,63 +1,62 @@
-use 5.008;
+
 use strict;
 use warnings;
-use File::Spec::Functions;
-use ExtUtils::MakeMaker;
-use Getopt::Long  qw(GetOptions);
 
-# clean up the testing flag file.
-my $t_author = catfile('t', 'author.enabled');
-unlink($t_author);
 
-my $usage        = "$0 [--author-tests]\n";
-my $author_tests = 0;
-GetOptions(
-    'author-tests' => \$author_tests,
-) or die $usage;
 
-# Check if we have a suitable version of the svnlook command.
-eval {
-    my $path = $ENV{PATH} || '';
-    open my $svnlook, '-|', 'svnlook --version'
-	or die "Aborting because I couldn't find the 'svnlook' executable in PATH='$path'.\n";
-    $_ = <$svnlook>;
-    if (my ($major, $minor, $patch) = (/(\d+)\.(\d+)\.(\d+)/)) {
-	$major > 1 || $major == 1 && $minor >= 4
-	    or die "I need at least version 1.4.0 of svnlook but you have only $major.$minor.$patch.\n";
-    } else {
-	die "Can't grok Subversion version from svnlook --version command.\n";
-    }
-    local $/ = undef;		# slurp mode
-    <$svnlook>;
-    close $svnlook or die "Can't close svnlook commnand.\n";
-};
-if ($@) {
-    warn $@;
-    # CPAN Testers says
-    # (http://wiki.cpantesters.org/wiki/CPANAuthorNotes) that we
-    # should simply exit normally before generating the Makefile if
-    # there is an unmet depencency.
-    exit 0;
-}
+use ExtUtils::MakeMaker 6.30;
 
-if ($author_tests) {
-    open(ENABLED, '>', $t_author) or die "Can't touch $t_author: $!\n";
-    close(ENABLED)                or die "Can't touch $t_author: $!\n";
-}
 
-my $look_pm = catfile('lib', 'SVN', 'Look.pm');
 
-WriteMakefile(
-    NAME                => 'SVN::Look',
-    AUTHOR              => 'Gustavo Chaves <gustavo+perl@gnustavo.org>',
-    VERSION_FROM        => $look_pm,
-    ABSTRACT_FROM       => $look_pm,
-    PL_FILES            => {},
-    PREREQ_PM => {
-        'Test::More'    => 0,
-	'File::Spec::Functions' => 0,
-	'URI::file' => 0,
-    },
-    dist                => { COMPRESS => 'gzip -9f', SUFFIX => 'gz', },
-    clean               => { FILES => 'SVN-Look-*' },
+my %WriteMakefileArgs = (
+  "ABSTRACT" => "A caching wrapper around the svnlook command.",
+  "AUTHOR" => "Gustavo L. de M. Chaves <gnustavo\@cpan.org>",
+  "BUILD_REQUIRES" => {
+    "Cwd" => 0,
+    "English" => 0,
+    "File::Copy" => 0,
+    "File::Path" => 0,
+    "File::Temp" => 0,
+    "Test::More" => 0,
+    "URI::file" => 0
+  },
+  "CONFIGURE_REQUIRES" => {
+    "ExtUtils::MakeMaker" => "6.30"
+  },
+  "DISTNAME" => "SVN-Look",
+  "EXE_FILES" => [],
+  "LICENSE" => "perl",
+  "NAME" => "SVN::Look",
+  "PREREQ_PM" => {
+    "Carp" => 0,
+    "File::Spec::Functions" => 0,
+    "strict" => 0,
+    "warnings" => 0
+  },
+  "VERSION" => "0.31",
+  "test" => {
+    "TESTS" => "t/*.t"
+  }
 );
+
+
+unless ( eval { ExtUtils::MakeMaker->VERSION(6.56) } ) {
+  my $br = delete $WriteMakefileArgs{BUILD_REQUIRES};
+  my $pp = $WriteMakefileArgs{PREREQ_PM};
+  for my $mod ( keys %$br ) {
+    if ( exists $pp->{$mod} ) {
+      $pp->{$mod} = $br->{$mod} if $br->{$mod} > $pp->{$mod};
+    }
+    else {
+      $pp->{$mod} = $br->{$mod};
+    }
+  }
+}
+
+delete $WriteMakefileArgs{CONFIGURE_REQUIRES}
+  unless eval { ExtUtils::MakeMaker->VERSION(6.52) };
+
+WriteMakefile(%WriteMakefileArgs);
+
+
+

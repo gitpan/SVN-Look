@@ -1,24 +1,27 @@
---- #YAML:1.0
-name:               SVN-Look
-version:            0.30
-abstract:           A caching wrapper aroung the svnlook command.
+---
+abstract: 'A caching wrapper around the svnlook command.'
 author:
-    - Gustavo Chaves <gustavo+perl@gnustavo.org>
-license:            unknown
-distribution_type:  module
-configure_requires:
-    ExtUtils::MakeMaker:  0
+  - 'Gustavo L. de M. Chaves <gnustavo@cpan.org>'
 build_requires:
-    ExtUtils::MakeMaker:  0
-requires:
-    File::Spec::Functions:  0
-    Test::More:           0
-    URI::file:            0
-no_index:
-    directory:
-        - t
-        - inc
-generated_by:       ExtUtils::MakeMaker version 6.56
+  Cwd: 0
+  English: 0
+  File::Copy: 0
+  File::Path: 0
+  File::Temp: 0
+  Test::More: 0
+  URI::file: 0
+configure_requires:
+  ExtUtils::MakeMaker: 6.30
+dynamic_config: 0
+generated_by: 'Dist::Zilla version 4.300009, CPAN::Meta::Converter version 2.120351'
+license: perl
 meta-spec:
-    url:      http://module-build.sourceforge.net/META-spec-v1.4.html
-    version:  1.4
+  url: http://module-build.sourceforge.net/META-spec-v1.4.html
+  version: 1.4
+name: SVN-Look
+requires:
+  Carp: 0
+  File::Spec::Functions: 0
+  strict: 0
+  warnings: 0
+version: 0.31
