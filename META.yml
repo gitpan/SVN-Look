@@ -24,4 +24,4 @@ requires:
   File::Spec::Functions: 0
   strict: 0
   warnings: 0
-version: 0.31
+version: 0.32

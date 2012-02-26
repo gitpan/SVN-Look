@@ -3,7 +3,7 @@ use warnings;
 
 package SVN::Look;
 {
-  $SVN::Look::VERSION = '0.31'; # TRIAL
+  $SVN::Look::VERSION = '0.32';
 }
 # ABSTRACT: A caching wrapper around the svnlook command.
 
@@ -291,7 +291,7 @@ SVN::Look - A caching wrapper around the svnlook command.
 
 =head1 VERSION
 
-version 0.31
+version 0.32
 
 =head1 SYNOPSIS
 

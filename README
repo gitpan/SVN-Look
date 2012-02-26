@@ -1,7 +1,7 @@
 
 
 This archive contains the distribution SVN-Look,
-version 0.31:
+version 0.32:
 
   A caching wrapper around the svnlook command.
 
