@@ -47,6 +47,7 @@ my %WriteMakefileArgs = (
   },
   'DISTNAME' => 'SVN-Look',
   'LICENSE' => 'perl',
+  'MIN_PERL_VERSION' => '5.008000',
   'NAME' => 'SVN::Look',
   'PREREQ_PM' => {
     'Carp' => '0',
@@ -54,7 +55,7 @@ my %WriteMakefileArgs = (
     'strict' => '0',
     'warnings' => '0'
   },
-  'VERSION' => '0.32',
+  'VERSION' => '0.33',
   'test' => {
     'TESTS' => 't/*.t'
   },

@@ -1,5 +1,9 @@
 Revision history for SVN-Look. -*- text -*-
 
+0.33      2012-02-27 20:48:45 America/Sao_Paulo
+
+	Require Perl 5.8.0.
+
 0.32      2012-02-26 18:54:21 America/Sao_Paulo
 
 	Reinsert check for svn command in Makefile.PL.
