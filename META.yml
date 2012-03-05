@@ -29,4 +29,4 @@ resources:
   bugtracker: http://rt.cpan.org/NoAuth/Bugs.html?Dist=SVN-Look
   homepage: https://code.google.com/p/svn-look/
   repository: https://code.google.com/p/svn-look/
-version: 0.33
+version: 0.34

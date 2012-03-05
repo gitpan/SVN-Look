@@ -1,5 +1,10 @@
 Revision history for SVN-Look. -*- text -*-
 
+0.34      2012-03-05 11:35:50 America/Sao_Paulo
+
+	Corrects RT#75545 and RT#75546 to make it supported in
+	Windows. (Thanks Mike Brimer!)
+
 0.33      2012-02-27 20:48:45 America/Sao_Paulo
 
 	Require Perl 5.8.0.

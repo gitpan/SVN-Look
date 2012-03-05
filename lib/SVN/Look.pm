@@ -4,7 +4,7 @@ use warnings;
 
 package SVN::Look;
 {
-  $SVN::Look::VERSION = '0.33';
+  $SVN::Look::VERSION = '0.34';
 }
 # ABSTRACT: A caching wrapper around the svnlook command.
 
@@ -14,7 +14,7 @@ use File::Spec::Functions;
 
 BEGIN {
     my $path = $ENV{PATH} || '';
-    open my $svnlook, '-|', 'svnlook', '--version'
+    open my $svnlook, 'svnlook --version |' ## no critic (InputOutput::ProhibitTwoArgOpen)
 	or die "Aborting because I couldn't find the 'svnlook' executable in PATH='$path'.\n";
     $_ = <$svnlook>;
     if (my ($major, $minor, $patch) = (/(\d+)\.(\d+)\.(\d+)/)) {
@@ -43,7 +43,8 @@ sub _svnlook {
     my ($self, $cmd, @args) = @_;
     my @cmd = ('svnlook', $cmd, $self->{repo});
     push @cmd, @{$self->{opts}} unless $cmd =~ /^(?:youngest|uuid|lock)$/;
-    open my $fd, '-|', @cmd, @args
+    my $args = @args ? '"' . join('" "', @args) . '"' : '';
+    open my $fd, join(' ', @cmd, $args, '|') ## no critic (InputOutput::ProhibitTwoArgOpen)
         or die "Can't exec svnlook $cmd: $!\n";
     if (wantarray) {
         my @lines = <$fd>;
@@ -292,7 +293,7 @@ SVN::Look - A caching wrapper around the svnlook command.
 
 =head1 VERSION
 
-version 0.33
+version 0.34
 
 =head1 SYNOPSIS
 
