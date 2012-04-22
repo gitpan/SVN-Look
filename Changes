@@ -1,5 +1,9 @@
 Revision history for SVN-Look. -*- text -*-
 
+0.35      2012-04-21 21:13:18 America/Sao_Paulo
+
+	Moved from Google Code to GitHub.
+
 0.34      2012-03-05 11:35:50 America/Sao_Paulo
 
 	Corrects RT#75545 and RT#75546 to make it supported in
