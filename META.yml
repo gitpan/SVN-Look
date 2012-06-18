@@ -22,10 +22,11 @@ name: SVN-Look
 requires:
   Carp: 0
   File::Spec::Functions: 0
-  perl: v5.8.0
+  perl: 5.008_000
   strict: 0
   warnings: 0
 resources:
   bugtracker: https://github.com/gnustavo/SVN-Look/issues
+  homepage: http://search.cpan.org/dist/SVN-Look/
   repository: git://github.com/gnustavo/SVN-Look.git
-version: 0.35
+version: 0.36

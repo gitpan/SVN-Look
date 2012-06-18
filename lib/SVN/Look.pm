@@ -1,10 +1,10 @@
-use 5.8.0;
+use 5.008_000;
 use strict;
 use warnings;
 
 package SVN::Look;
 {
-  $SVN::Look::VERSION = '0.35';
+  $SVN::Look::VERSION = '0.36';
 }
 # ABSTRACT: A caching wrapper around the svnlook command.
 
@@ -48,14 +48,26 @@ sub _svnlook {
         or die "Can't exec svnlook $cmd: $!\n";
     if (wantarray) {
         my @lines = <$fd>;
-        close $fd or die "Failed closing svnlook $cmd: $!\n";
+        unless (close $fd) {
+	    if ($!) {
+		die "Error closing (wantarray) svnlook $cmd pipe: $!\n";
+	    } else {
+		die "Exit status $? from (wantarray) svnlook $cmd\n";
+	    }
+	}
         chomp @lines;
         return @lines;
     }
     else {
         local $/ = undef;
         my $line = <$fd>;
-        close $fd or die "Failed closing svnlook $cmd: $!\n";
+        unless (close $fd) {
+	    if ($!) {
+		die "Error closing svnlook $cmd pipe: $!\n";
+	    } else {
+		die "Exit status $? from svnlook $cmd\n";
+	    }
+	}
         chomp $line unless $cmd eq 'cat';
         return $line;
     }
@@ -255,7 +267,8 @@ sub propget {
 sub proplist {
     my ($self, $path) = @_;
     unless ($self->{proplist}{$path}) {
-        my $text = $self->_svnlook('proplist', '--verbose', $path);
+        my $text = eval {$self->_svnlook('proplist', '--verbose', $path)};
+	return {} unless $text;
         my @list = split /^\s\s(\S+)\s:\s/m, $text;
         shift @list;            # skip the leading empty field
         chomp(my %hash = @list);
@@ -293,7 +306,7 @@ SVN::Look - A caching wrapper around the svnlook command.
 
 =head1 VERSION
 
-version 0.35
+version 0.36
 
 =head1 SYNOPSIS
 
