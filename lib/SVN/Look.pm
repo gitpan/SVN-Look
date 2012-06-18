@@ -4,7 +4,7 @@ use warnings;
 
 package SVN::Look;
 {
-  $SVN::Look::VERSION = '0.36';
+  $SVN::Look::VERSION = '0.37';
 }
 # ABSTRACT: A caching wrapper around the svnlook command.
 
@@ -267,8 +267,7 @@ sub propget {
 sub proplist {
     my ($self, $path) = @_;
     unless ($self->{proplist}{$path}) {
-        my $text = eval {$self->_svnlook('proplist', '--verbose', $path)};
-	return {} unless $text;
+        my $text = $self->_svnlook('proplist', '--verbose', $path);
         my @list = split /^\s\s(\S+)\s:\s/m, $text;
         shift @list;            # skip the leading empty field
         chomp(my %hash = @list);
@@ -306,7 +305,7 @@ SVN::Look - A caching wrapper around the svnlook command.
 
 =head1 VERSION
 
-version 0.36
+version 0.37
 
 =head1 SYNOPSIS
 
