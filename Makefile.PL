@@ -52,10 +52,11 @@ my %WriteMakefileArgs = (
   'PREREQ_PM' => {
     'Carp' => '0',
     'File::Spec::Functions' => '0',
+    'List::MoreUtils' => '0',
     'strict' => '0',
     'warnings' => '0'
   },
-  'VERSION' => '0.37',
+  'VERSION' => '0.38',
   'test' => {
     'TESTS' => 't/*.t'
   },

@@ -4,12 +4,13 @@ use warnings;
 
 package SVN::Look;
 {
-  $SVN::Look::VERSION = '0.37';
+  $SVN::Look::VERSION = '0.38';
 }
 # ABSTRACT: A caching wrapper around the svnlook command.
 
 use Carp;
 use File::Spec::Functions;
+use List::MoreUtils qw{uniq};
 
 
 BEGIN {
@@ -173,7 +174,10 @@ sub changed {
     my $self = shift;
     my $hash = $self->changed_hash();
     unless (exists $hash->{changed}) {
-        $hash->{changed} = [@{$hash->{added}}, @{$hash->{updated}}, @{$hash->{deleted}}, @{$hash->{prop_modified}}];
+        $hash->{changed} = [sort(uniq(@{$hash->{added}},
+				      @{$hash->{updated}},
+				      @{$hash->{deleted}},
+				      @{$hash->{prop_modified}}))];
     }
     return @{$hash->{changed}};
 }
@@ -305,7 +309,7 @@ SVN::Look - A caching wrapper around the svnlook command.
 
 =head1 VERSION
 
-version 0.37
+version 0.38
 
 =head1 SYNOPSIS
 
