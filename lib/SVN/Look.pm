@@ -4,7 +4,7 @@ use warnings;
 
 package SVN::Look;
 {
-  $SVN::Look::VERSION = '0.38';
+  $SVN::Look::VERSION = '0.39';
 }
 # ABSTRACT: A caching wrapper around the svnlook command.
 
@@ -13,20 +13,22 @@ use File::Spec::Functions;
 use List::MoreUtils qw{uniq};
 
 
+my @SVN_VERSION;
+
 BEGIN {
     my $path = $ENV{PATH} || '';
     open my $svnlook, 'svnlook --version |' ## no critic (InputOutput::ProhibitTwoArgOpen)
 	or die "Aborting because I couldn't find the 'svnlook' executable in PATH='$path'.\n";
     $_ = <$svnlook>;
-    if (my ($major, $minor, $patch) = (/(\d+)\.(\d+)\.(\d+)/)) {
-	$major > 1 || $major == 1 && $minor >= 4
-	    or die "I need at least version 1.4.0 of svnlook but you have only $major.$minor.$patch in PATH='$path'.\n";
+    if (@SVN_VERSION = (/(\d+)\.(\d+)\.(\d+)/)) {
+        $SVN_VERSION[0] > 1 || $SVN_VERSION[0] == 1 && $SVN_VERSION[1] >= 4
+	    or die "I need at least version 1.4.0 of svnlook but you have only ", join('.', @SVN_VERSION), " in PATH='$path'.\n";
     } else {
 	die "Can't grok Subversion version from svnlook --version command.\n";
     }
     local $/ = undef;		# slurp mode
     <$svnlook>;
-    close $svnlook or die "Can't close svnlook commnand.\n";
+    close $svnlook or die "Can't close svnlook command.\n";
 }
 
 
@@ -268,14 +270,37 @@ sub propget {
 }
 
 
+# The 'svnlook proplist' command had its output format changed in svn
+# 1.8.0. So, in order to make the code more stable we try to use the
+# --xml option. However, this option was implemented on svn 1.6.0
+# only. Since we still want to support older Subversions we have to
+# check if we can use that option first. See discussion on
+# https://github.com/gnustavo/SVN-Look/pull/1.
+
+my $proplist_does_support_xml_option;
+
 sub proplist {
     my ($self, $path) = @_;
+
     unless ($self->{proplist}{$path}) {
-        my $text = $self->_svnlook('proplist', '--verbose', $path);
-        my @list = split /^\s\s(\S+)\s:\s/m, $text;
-        shift @list;            # skip the leading empty field
-        chomp(my %hash = @list);
-        $self->{proplist}{$path} = \%hash;
+        $proplist_does_support_xml_option = $SVN_VERSION[0] > 1 || $SVN_VERSION[0] == 1 && $SVN_VERSION[1] >= 8
+            unless defined $proplist_does_support_xml_option;
+
+        if ($proplist_does_support_xml_option) {
+            my $xml = $self->_svnlook(qw/proplist --verbose --xml/, $path);
+            require XML::Simple;
+            my $dom = XML::Simple::XMLin($xml, ForceArray => ['property']);
+            while (my ($prop, $value) = each %{$dom->{target}{property}}) {
+                $self->{proplist}{$path}{$prop} = $value->{content};
+            }
+        } else {
+            # Old syntax up to SVN 1.7.
+            my $text = $self->_svnlook('proplist', '--verbose', $path);
+            my @list = split /^\s\s(\S+)\s:\s/m, $text;
+            shift @list;        # skip the leading empty field
+            chomp(my %hash = @list);
+            $self->{proplist}{$path} = \%hash;
+        }
     }
     return $self->{proplist}{$path};
 }
@@ -301,6 +326,7 @@ sub youngest {
 1; # End of SVN::Look
 
 __END__
+
 =pod
 
 =head1 NAME
@@ -309,7 +335,7 @@ SVN::Look - A caching wrapper around the svnlook command.
 
 =head1 VERSION
 
-version 0.38
+version 0.39
 
 =head1 SYNOPSIS
 
@@ -332,7 +358,7 @@ used to gather all sorts of information about a repository, its
 revisions, and its transactions. This module provides a simple object
 oriented interface to a specific svnlook invocation, to make it easier
 to hook writers to get and use the information they need. Moreover,
-all the information gathered buy calling the svnlook command is cached
+all the information gathered by calling the svnlook command is cached
 in the object, avoiding repetitious calls.
 
 =head1 METHODS
@@ -557,10 +583,9 @@ Gustavo L. de M. Chaves <gnustavo@cpan.org>
 
 =head1 COPYRIGHT AND LICENSE
 
-This software is copyright (c) 2012 by CPqD.
+This software is copyright (c) 2013 by CPqD.
 
 This is free software; you can redistribute it and/or modify it under
 the same terms as the Perl 5 programming language system itself.
 
 =cut
-
