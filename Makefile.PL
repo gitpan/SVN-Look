@@ -43,7 +43,9 @@ my %WriteMakefileArgs = (
   'PREREQ_PM' => {
     'Carp' => '0',
     'File::Spec::Functions' => '0',
+    'File::Temp' => '0',
     'List::MoreUtils' => '0',
+    'MIME::Base64' => '0',
     'XML::Simple' => '0',
     'strict' => '0',
     'warnings' => '0'
@@ -52,12 +54,11 @@ my %WriteMakefileArgs = (
     'Cwd' => '0',
     'File::Copy' => '0',
     'File::Path' => '0',
-    'File::Temp' => '0',
     'Test::More' => '0',
     'URI::file' => '0',
     'lib' => '0'
   },
-  'VERSION' => '0.39',
+  'VERSION' => '0.40',
   'test' => {
     'TESTS' => 't/*.t'
   },

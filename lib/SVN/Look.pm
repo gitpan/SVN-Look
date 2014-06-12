@@ -1,13 +1,12 @@
+## no critic (Modules::RequireExplicitPackage, InputOutput::RequireBriefOpen)
+
 use 5.008_000;
 use strict;
 use warnings;
 
 package SVN::Look;
-{
-  $SVN::Look::VERSION = '0.39';
-}
 # ABSTRACT: A caching wrapper around the svnlook command.
-
+$SVN::Look::VERSION = '0.40';
 use Carp;
 use File::Spec::Functions;
 use List::MoreUtils qw{uniq};
@@ -17,12 +16,19 @@ my @SVN_VERSION;
 
 BEGIN {
     my $path = $ENV{PATH} || '';
+
+    # Perl on Windows doesn't support the piped three-arg open. So we use
+    # the two-arg open here and don't care about Perl::Critic since this is
+    # a fixed string command.
+
     open my $svnlook, 'svnlook --version |' ## no critic (InputOutput::ProhibitTwoArgOpen)
 	or die "Aborting because I couldn't find the 'svnlook' executable in PATH='$path'.\n";
     $_ = <$svnlook>;
     if (@SVN_VERSION = (/(\d+)\.(\d+)\.(\d+)/)) {
-        $SVN_VERSION[0] > 1 || $SVN_VERSION[0] == 1 && $SVN_VERSION[1] >= 4
-	    or die "I need at least version 1.4.0 of svnlook but you have only ", join('.', @SVN_VERSION), " in PATH='$path'.\n";
+        unless ($SVN_VERSION[0] > 1 || $SVN_VERSION[0] == 1 && $SVN_VERSION[1] >= 4) {
+	    die "I need at least version 1.4.0 of svnlook but you have only ",
+                join('.', @SVN_VERSION), " in PATH='$path'.\n";
+        }
     } else {
 	die "Can't grok Subversion version from svnlook --version command.\n";
     }
@@ -46,9 +52,43 @@ sub _svnlook {
     my ($self, $cmd, @args) = @_;
     my @cmd = ('svnlook', $cmd, $self->{repo});
     push @cmd, @{$self->{opts}} unless $cmd =~ /^(?:youngest|uuid|lock)$/;
-    my $args = @args ? '"' . join('" "', @args) . '"' : '';
-    open my $fd, join(' ', @cmd, $args, '|') ## no critic (InputOutput::ProhibitTwoArgOpen)
-        or die "Can't exec svnlook $cmd: $!\n";
+
+    my $fd;
+    my $tmpfile;
+    if ($^O ne 'MSWin32') {
+	open $fd, '-|', @cmd, @args
+	    or die "Can't exec svnlook $cmd: $!\n";
+    } else {
+	# Windows doesn't support the three-argument version of open
+	# neither the pipe function. So we run the svnlook command
+	# with system, sending its output to a temporary file and
+	# opening the file later in $fd.
+
+	# Create the temporary file.
+	require File::Temp;
+	$tmpfile = File::Temp->new();
+	my $filename = $tmpfile->filename;
+
+	## no critic (ProhibitTwoArgOpen, ProhibitBarewordFileHandles)
+
+	# Dup STDOUT and direct it to the file
+	no warnings 'once';     ## no critic (TestingAndDebugging::ProhibitNoWarnings)
+	open OLDOUT, '>&STDOUT'   or die "Can't dup STDOUT: $!\n";
+	open STDOUT, ">$filename" or die "Can't redirect STDOUT to $filename: $!\n";
+
+	# Shell out the svnlook command
+	system(@cmd, @args) == 0
+	    or die "system @cmd failed: $?\n";
+
+	# Restore STDOUT
+	open STDOUT, '>&OLDOUT' or die "Can't redirect STDOUT to its former value: $!\n";
+
+	# Open the temporary file
+	open $fd, "<$filename" or die "Can't open $filename: $!\n";
+
+	## use critic
+    }
+
     if (wantarray) {
         my @lines = <$fd>;
         unless (close $fd) {
@@ -117,7 +157,7 @@ sub changed_hash {
         foreach ($self->_svnlook('changed', '--copy-info')) {
             next if length($_) <= 4;
             chomp;
-            my ($action, $prop, undef, undef, $changed) = unpack 'AAAA A*', $_;
+            my ($action, $prop, $changed) = unpack 'AAxx a*';
             if    ($action eq 'A') {
                 push @added,   $changed;
             }
@@ -234,7 +274,7 @@ sub info {
 }
 
 
-sub lock {
+sub lock {                      ## no critic (ProhibitBuiltinHomonyms)
     my ($self, $path) = @_;
     my %lock = ();
     my @lock = $self->_svnlook('lock', $path);
@@ -291,7 +331,16 @@ sub proplist {
             require XML::Simple;
             my $dom = XML::Simple::XMLin($xml, ForceArray => ['property']);
             while (my ($prop, $value) = each %{$dom->{target}{property}}) {
-                $self->{proplist}{$path}{$prop} = $value->{content};
+                my $content = $value->{content};
+                if (my $encoding = $value->{encoding}) {
+                    if ($encoding eq 'base64') {
+                        require MIME::Base64;
+                        $content = MIME::Base64::decode($content);
+                    } else {
+                        die "Don't know how to decode property '$prop' value encoded as '$encoding'\n";
+                    }
+                }
+                $self->{proplist}{$path}{$prop} = $content;
             }
         } else {
             # Old syntax up to SVN 1.7.
@@ -329,13 +378,15 @@ __END__
 
 =pod
 
+=encoding UTF-8
+
 =head1 NAME
 
 SVN::Look - A caching wrapper around the svnlook command.
 
 =head1 VERSION
 
-version 0.39
+version 0.40
 
 =head1 SYNOPSIS
 
@@ -583,7 +634,7 @@ Gustavo L. de M. Chaves <gnustavo@cpan.org>
 
 =head1 COPYRIGHT AND LICENSE
 
-This software is copyright (c) 2013 by CPqD.
+This software is copyright (c) 2014 by CPqD.
 
 This is free software; you can redistribute it and/or modify it under
 the same terms as the Perl 5 programming language system itself.
