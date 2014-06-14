@@ -6,7 +6,7 @@ use warnings;
 
 package SVN::Look;
 # ABSTRACT: A caching wrapper around the svnlook command.
-$SVN::Look::VERSION = '0.40';
+$SVN::Look::VERSION = '0.41';
 use Carp;
 use File::Spec::Functions;
 use List::MoreUtils qw{uniq};
@@ -157,7 +157,7 @@ sub changed_hash {
         foreach ($self->_svnlook('changed', '--copy-info')) {
             next if length($_) <= 4;
             chomp;
-            my ($action, $prop, $changed) = unpack 'AAxx a*';
+            my ($action, $prop, $changed) = unpack 'AAxx a*', $_;
             if    ($action eq 'A') {
                 push @added,   $changed;
             }
@@ -386,7 +386,7 @@ SVN::Look - A caching wrapper around the svnlook command.
 
 =head1 VERSION
 
-version 0.40
+version 0.41
 
 =head1 SYNOPSIS
 
